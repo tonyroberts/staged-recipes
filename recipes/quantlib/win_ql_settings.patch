@@ -1,0 +1,561 @@
+From 464b2222ca51848c5ad7723a22b55dcc73ac6826 Mon Sep 17 00:00:00 2001
+From: Tony Roberts <tony@pyxll.com>
+Date: Wed, 11 May 2016 15:02:00 +0100
+Subject: [PATCH] Patch for windows DLL build
+
+---
+ QuantLib.vcxproj    |  42 ++++++++++++++-----
+ QuantLib_vc8.vcproj |  28 ++++++-------
+ QuantLib_vc9.vcproj |  56 +++++++++++---------------
+ generate_symbols.py | 113 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ ql/settings.hpp     |   2 +-
+ ql_symbols.def      |   2 +
+ 6 files changed, 185 insertions(+), 58 deletions(-)
+ create mode 100644 generate_symbols.py
+ create mode 100644 ql_symbols.def
+
+diff --git QuantLib.vcxproj QuantLib.vcxproj
+index ee07170..7e85dbc 100644
+--- QuantLib.vcxproj
++++ QuantLib.vcxproj
+@@ -42,42 +42,42 @@
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+   <Import Project="QuantLib.props" />
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|Win32'" Label="Configuration">
+-    <ConfigurationType>StaticLibrary</ConfigurationType>
++    <ConfigurationType>DynamicLibrary</ConfigurationType>
+     <UseOfMfc>false</UseOfMfc>
+     <CharacterSet>MultiByte</CharacterSet>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|x64'" Label="Configuration">
+-    <ConfigurationType>StaticLibrary</ConfigurationType>
++    <ConfigurationType>DynamicLibrary</ConfigurationType>
+     <UseOfMfc>false</UseOfMfc>
+     <CharacterSet>MultiByte</CharacterSet>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|Win32'" Label="Configuration">
+-    <ConfigurationType>StaticLibrary</ConfigurationType>
++    <ConfigurationType>DynamicLibrary</ConfigurationType>
+     <UseOfMfc>false</UseOfMfc>
+     <CharacterSet>MultiByte</CharacterSet>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|x64'" Label="Configuration">
+-    <ConfigurationType>StaticLibrary</ConfigurationType>
++    <ConfigurationType>DynamicLibrary</ConfigurationType>
+     <UseOfMfc>false</UseOfMfc>
+     <CharacterSet>MultiByte</CharacterSet>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+-    <ConfigurationType>StaticLibrary</ConfigurationType>
++    <ConfigurationType>DynamicLibrary</ConfigurationType>
+     <UseOfMfc>false</UseOfMfc>
+     <CharacterSet>MultiByte</CharacterSet>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+-    <ConfigurationType>StaticLibrary</ConfigurationType>
++    <ConfigurationType>DynamicLibrary</ConfigurationType>
+     <UseOfMfc>false</UseOfMfc>
+     <CharacterSet>MultiByte</CharacterSet>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+-    <ConfigurationType>StaticLibrary</ConfigurationType>
++    <ConfigurationType>DynamicLibrary</ConfigurationType>
+     <UseOfMfc>false</UseOfMfc>
+     <CharacterSet>MultiByte</CharacterSet>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+-    <ConfigurationType>StaticLibrary</ConfigurationType>
++    <ConfigurationType>DynamicLibrary</ConfigurationType>
+     <UseOfMfc>false</UseOfMfc>
+     <CharacterSet>MultiByte</CharacterSet>
+   </PropertyGroup>
+@@ -179,6 +179,9 @@
+     <Bscmake>
+       <SuppressStartupBanner>false</SuppressStartupBanner>
+     </Bscmake>
++    <Link>
++      <ModuleDefinitionFile>ql_symbols.def</ModuleDefinitionFile>
++    </Link>
+   </ItemDefinitionGroup>
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+     <ClCompile>
+@@ -223,6 +226,9 @@
+     <Bscmake>
+       <SuppressStartupBanner>false</SuppressStartupBanner>
+     </Bscmake>
++    <Link>
++      <ModuleDefinitionFile>ql_symbols.def</ModuleDefinitionFile>
++    </Link>
+   </ItemDefinitionGroup>
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+     <ClCompile>
+@@ -265,6 +271,9 @@
+     <Bscmake>
+       <SuppressStartupBanner>false</SuppressStartupBanner>
+     </Bscmake>
++    <Link>
++      <ModuleDefinitionFile>ql_symbols.def</ModuleDefinitionFile>
++    </Link>
+   </ItemDefinitionGroup>
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+     <ClCompile>
+@@ -307,6 +316,9 @@
+     <Bscmake>
+       <SuppressStartupBanner>false</SuppressStartupBanner>
+     </Bscmake>
++    <Link>
++      <ModuleDefinitionFile>ql_symbols.def</ModuleDefinitionFile>
++    </Link>
+   </ItemDefinitionGroup>
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|Win32'">
+     <ClCompile>
+@@ -351,6 +363,9 @@
+     <Bscmake>
+       <SuppressStartupBanner>false</SuppressStartupBanner>
+     </Bscmake>
++    <Link>
++      <ModuleDefinitionFile>ql_symbols.def</ModuleDefinitionFile>
++    </Link>
+   </ItemDefinitionGroup>
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release (static runtime)|x64'">
+     <ClCompile>
+@@ -395,6 +410,9 @@
+     <Bscmake>
+       <SuppressStartupBanner>false</SuppressStartupBanner>
+     </Bscmake>
++    <Link>
++      <ModuleDefinitionFile>ql_symbols.def</ModuleDefinitionFile>
++    </Link>
+   </ItemDefinitionGroup>
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|Win32'">
+     <ClCompile>
+@@ -437,6 +455,9 @@
+     <Bscmake>
+       <SuppressStartupBanner>false</SuppressStartupBanner>
+     </Bscmake>
++    <Link>
++      <ModuleDefinitionFile>ql_symbols.def</ModuleDefinitionFile>
++    </Link>
+   </ItemDefinitionGroup>
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|x64'">
+     <ClCompile>
+@@ -479,6 +500,9 @@
+     <Bscmake>
+       <SuppressStartupBanner>false</SuppressStartupBanner>
+     </Bscmake>
++    <Link>
++      <ModuleDefinitionFile>ql_symbols.def</ModuleDefinitionFile>
++    </Link>
+   </ItemDefinitionGroup>
+   <ItemGroup>
+     <ClInclude Include="ql\math\polynomialmathfunction.hpp" />
+@@ -2570,4 +2594,4 @@
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+   <ImportGroup Label="ExtensionTargets">
+   </ImportGroup>
+-</Project>
++</Project>
+\ No newline at end of file
+diff --git QuantLib_vc8.vcproj QuantLib_vc8.vcproj
+index 4c94461..b00e3f9 100644
+--- QuantLib_vc8.vcproj
++++ QuantLib_vc8.vcproj
+@@ -18,7 +18,7 @@
+ 			Name="Debug|Win32"
+ 			OutputDirectory=".\build\vc80\$(ConfigurationName)"
+ 			IntermediateDirectory=".\build\vc80\$(ConfigurationName)"
+-			ConfigurationType="4"
++			ConfigurationType="2"
+ 			UseOfMFC="0"
+ 			ATLMinimizesCRunTimeLibraryUsage="false"
+ 			CharacterSet="2"
+@@ -76,9 +76,8 @@
+ 				CommandLine="if not exist lib mkdir lib"
+ 			/>
+ 			<Tool
+-				Name="VCLibrarianTool"
+-				OutputFile=".\lib\QuantLib-vc80-mt-gd.lib"
+-				SuppressStartupBanner="true"
++				Name="VCLinkerTool"
++				ModuleDefinitionFile="ql_symbols.def"
+ 			/>
+ 			<Tool
+ 				Name="VCALinkTool"
+@@ -101,7 +100,7 @@
+ 			Name="Release (static runtime)|Win32"
+ 			OutputDirectory=".\build\vc80\$(ConfigurationName)"
+ 			IntermediateDirectory=".\build\vc80\$(ConfigurationName)"
+-			ConfigurationType="4"
++			ConfigurationType="2"
+ 			UseOfMFC="0"
+ 			ATLMinimizesCRunTimeLibraryUsage="false"
+ 			CharacterSet="2"
+@@ -162,9 +161,8 @@
+ 				CommandLine="if not exist lib mkdir lib"
+ 			/>
+ 			<Tool
+-				Name="VCLibrarianTool"
+-				OutputFile=".\lib\QuantLib-vc80-mt-s.lib"
+-				SuppressStartupBanner="true"
++				Name="VCLinkerTool"
++				ModuleDefinitionFile="ql_symbols.def"
+ 			/>
+ 			<Tool
+ 				Name="VCALinkTool"
+@@ -187,7 +185,7 @@
+ 			Name="Release|Win32"
+ 			OutputDirectory=".\build\vc80\$(ConfigurationName)"
+ 			IntermediateDirectory=".\build\vc80\$(ConfigurationName)"
+-			ConfigurationType="4"
++			ConfigurationType="2"
+ 			UseOfMFC="0"
+ 			ATLMinimizesCRunTimeLibraryUsage="false"
+ 			CharacterSet="2"
+@@ -248,9 +246,8 @@
+ 				CommandLine="if not exist lib mkdir lib"
+ 			/>
+ 			<Tool
+-				Name="VCLibrarianTool"
+-				OutputFile=".\lib\QuantLib-vc80-mt.lib"
+-				SuppressStartupBanner="true"
++				Name="VCLinkerTool"
++				ModuleDefinitionFile="ql_symbols.def"
+ 			/>
+ 			<Tool
+ 				Name="VCALinkTool"
+@@ -273,7 +270,7 @@
+ 			Name="Debug (static runtime)|Win32"
+ 			OutputDirectory=".\build\vc80\$(ConfigurationName)"
+ 			IntermediateDirectory=".\build\vc80\$(ConfigurationName)"
+-			ConfigurationType="4"
++			ConfigurationType="2"
+ 			UseOfMFC="0"
+ 			ATLMinimizesCRunTimeLibraryUsage="false"
+ 			CharacterSet="2"
+@@ -331,9 +328,8 @@
+ 				CommandLine="if not exist lib mkdir lib"
+ 			/>
+ 			<Tool
+-				Name="VCLibrarianTool"
+-				OutputFile=".\lib\QuantLib-vc80-mt-sgd.lib"
+-				SuppressStartupBanner="true"
++				Name="VCLinkerTool"
++				ModuleDefinitionFile="ql_symbols.def"
+ 			/>
+ 			<Tool
+ 				Name="VCALinkTool"
+diff --git QuantLib_vc9.vcproj QuantLib_vc9.vcproj
+index f753dd6..16685bf 100644
+--- QuantLib_vc9.vcproj
++++ QuantLib_vc9.vcproj
+@@ -22,7 +22,7 @@
+ 			Name="Release|Win32"
+ 			OutputDirectory=".\build\vc90\$(PlatformName)\$(ConfigurationName)"
+ 			IntermediateDirectory=".\build\vc90\$(PlatformName)\$(ConfigurationName)"
+-			ConfigurationType="4"
++			ConfigurationType="2"
+ 			UseOfMFC="0"
+ 			ATLMinimizesCRunTimeLibraryUsage="false"
+ 			CharacterSet="2"
+@@ -84,9 +84,8 @@
+ 				CommandLine="if not exist lib mkdir lib"
+ 			/>
+ 			<Tool
+-				Name="VCLibrarianTool"
+-				OutputFile=".\lib\QuantLib-vc90-mt.lib"
+-				SuppressStartupBanner="true"
++				Name="VCLinkerTool"
++				ModuleDefinitionFile="ql_symbols.def"
+ 			/>
+ 			<Tool
+ 				Name="VCALinkTool"
+@@ -109,7 +108,7 @@
+ 			Name="Debug|Win32"
+ 			OutputDirectory=".\build\vc90\$(PlatformName)\$(ConfigurationName)"
+ 			IntermediateDirectory=".\build\vc90\$(PlatformName)\$(ConfigurationName)"
+-			ConfigurationType="4"
++			ConfigurationType="2"
+ 			UseOfMFC="0"
+ 			ATLMinimizesCRunTimeLibraryUsage="false"
+ 			CharacterSet="2"
+@@ -167,9 +166,8 @@
+ 				CommandLine="if not exist lib mkdir lib"
+ 			/>
+ 			<Tool
+-				Name="VCLibrarianTool"
+-				OutputFile=".\lib\QuantLib-vc90-mt-gd.lib"
+-				SuppressStartupBanner="true"
++				Name="VCLinkerTool"
++				ModuleDefinitionFile="ql_symbols.def"
+ 			/>
+ 			<Tool
+ 				Name="VCALinkTool"
+@@ -192,7 +190,7 @@
+ 			Name="Release (static runtime)|Win32"
+ 			OutputDirectory=".\build\vc90\$(PlatformName)\$(ConfigurationName)"
+ 			IntermediateDirectory=".\build\vc90\$(PlatformName)\$(ConfigurationName)"
+-			ConfigurationType="4"
++			ConfigurationType="2"
+ 			UseOfMFC="0"
+ 			ATLMinimizesCRunTimeLibraryUsage="false"
+ 			CharacterSet="2"
+@@ -254,9 +252,8 @@
+ 				CommandLine="if not exist lib mkdir lib"
+ 			/>
+ 			<Tool
+-				Name="VCLibrarianTool"
+-				OutputFile=".\lib\QuantLib-vc90-mt-s.lib"
+-				SuppressStartupBanner="true"
++				Name="VCLinkerTool"
++				ModuleDefinitionFile="ql_symbols.def"
+ 			/>
+ 			<Tool
+ 				Name="VCALinkTool"
+@@ -279,7 +276,7 @@
+ 			Name="Debug (static runtime)|Win32"
+ 			OutputDirectory=".\build\vc90\$(PlatformName)\$(ConfigurationName)"
+ 			IntermediateDirectory=".\build\vc90\$(PlatformName)\$(ConfigurationName)"
+-			ConfigurationType="4"
++			ConfigurationType="2"
+ 			UseOfMFC="0"
+ 			ATLMinimizesCRunTimeLibraryUsage="false"
+ 			CharacterSet="2"
+@@ -338,9 +335,8 @@
+ 				CommandLine="if not exist lib mkdir lib"
+ 			/>
+ 			<Tool
+-				Name="VCLibrarianTool"
+-				OutputFile=".\lib\QuantLib-vc90-mt-sgd.lib"
+-				SuppressStartupBanner="true"
++				Name="VCLinkerTool"
++				ModuleDefinitionFile="ql_symbols.def"
+ 			/>
+ 			<Tool
+ 				Name="VCALinkTool"
+@@ -363,7 +359,7 @@
+ 			Name="Release|x64"
+ 			OutputDirectory=".\build\vc90\$(PlatformName)\$(ConfigurationName)"
+ 			IntermediateDirectory=".\build\vc90\$(PlatformName)\$(ConfigurationName)"
+-			ConfigurationType="4"
++			ConfigurationType="2"
+ 			UseOfMFC="0"
+ 			ATLMinimizesCRunTimeLibraryUsage="false"
+ 			CharacterSet="2"
+@@ -424,9 +420,8 @@
+ 				CommandLine="if not exist lib mkdir lib"
+ 			/>
+ 			<Tool
+-				Name="VCLibrarianTool"
+-				OutputFile=".\lib\QuantLib-vc90-$(PlatformName)-mt.lib"
+-				SuppressStartupBanner="true"
++				Name="VCLinkerTool"
++				ModuleDefinitionFile="ql_symbols.def"
+ 			/>
+ 			<Tool
+ 				Name="VCALinkTool"
+@@ -449,7 +444,7 @@
+ 			Name="Debug|x64"
+ 			OutputDirectory=".\build\vc90\$(PlatformName)\$(ConfigurationName)"
+ 			IntermediateDirectory=".\build\vc90\$(PlatformName)\$(ConfigurationName)"
+-			ConfigurationType="4"
++			ConfigurationType="2"
+ 			UseOfMFC="0"
+ 			ATLMinimizesCRunTimeLibraryUsage="false"
+ 			CharacterSet="2"
+@@ -508,9 +503,8 @@
+ 				CommandLine="if not exist lib mkdir lib"
+ 			/>
+ 			<Tool
+-				Name="VCLibrarianTool"
+-				OutputFile=".\lib\QuantLib-vc90-$(PlatformName)-mt-gd.lib"
+-				SuppressStartupBanner="true"
++				Name="VCLinkerTool"
++				ModuleDefinitionFile="ql_symbols.def"
+ 			/>
+ 			<Tool
+ 				Name="VCALinkTool"
+@@ -533,7 +527,7 @@
+ 			Name="Release (static runtime)|x64"
+ 			OutputDirectory=".\build\vc90\$(PlatformName)\$(ConfigurationName)"
+ 			IntermediateDirectory=".\build\vc90\$(PlatformName)\$(ConfigurationName)"
+-			ConfigurationType="4"
++			ConfigurationType="2"
+ 			UseOfMFC="0"
+ 			ATLMinimizesCRunTimeLibraryUsage="false"
+ 			CharacterSet="2"
+@@ -594,9 +588,8 @@
+ 				CommandLine="if not exist lib mkdir lib"
+ 			/>
+ 			<Tool
+-				Name="VCLibrarianTool"
+-				OutputFile=".\lib\QuantLib-vc90-$(PlatformName)-mt-s.lib"
+-				SuppressStartupBanner="true"
++				Name="VCLinkerTool"
++				ModuleDefinitionFile="ql_symbols.def"
+ 			/>
+ 			<Tool
+ 				Name="VCALinkTool"
+@@ -619,7 +612,7 @@
+ 			Name="Debug (static runtime)|x64"
+ 			OutputDirectory=".\build\vc90\$(PlatformName)\$(ConfigurationName)"
+ 			IntermediateDirectory=".\build\vc90\$(PlatformName)\$(ConfigurationName)"
+-			ConfigurationType="4"
++			ConfigurationType="2"
+ 			UseOfMFC="0"
+ 			ATLMinimizesCRunTimeLibraryUsage="false"
+ 			CharacterSet="2"
+@@ -678,9 +671,8 @@
+ 				CommandLine="if not exist lib mkdir lib"
+ 			/>
+ 			<Tool
+-				Name="VCLibrarianTool"
+-				OutputFile=".\lib\QuantLib-vc90-$(PlatformName)-mt-sgd.lib"
+-				SuppressStartupBanner="true"
++				Name="VCLinkerTool"
++				ModuleDefinitionFile="ql_symbols.def"
+ 			/>
+ 			<Tool
+ 				Name="VCALinkTool"
+diff --git generate_symbols.py generate_symbols.py
+new file mode 100644
+index 0000000..0bdcd2e
+--- /dev/null
++++ generate_symbols.py
+@@ -0,0 +1,113 @@
++"""Symbol management to generate .def file.
++Derived from https://github.com/enthought/pyql/blob/master/scripts/generate_symbols.py
++License for original file::
++
++    This software is OSI Certified Open Source Software.
++    OSI Certified is a certification mark of the Open Source Initiative.
++
++    Copyright (c) 2006, Enthought, Inc.
++    All rights reserved.
++"""
++import glob
++import os
++import sys
++import six
++import subprocess
++from distutils import msvc9compiler
++from platform import architecture
++
++VC_VERSION = float(sys.argv[1]) # msvc9compiler.VERSION
++ARCH = "x64" if architecture()[0] == "64bit" else "x86"
++
++def symbol_generator_from_obj_file(object_file):
++
++    command = ['dumpbin', '/SYMBOLS', object_file]
++
++    # don't show a window when executing the subprocess
++    startupinfo = subprocess.STARTUPINFO()
++    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
++
++    result = subprocess.check_output(command, startupinfo=startupinfo)
++
++    def _is_ql_symbols(symb):
++        # Includes all the symbols containing QuantLib except the ones with
++        # AVError and all the scalar deleting destructor (prefixed with _G)
++        # and all the vector deleting destructor (prefixed with a _E)
++        # and ?AVError (not yet sure what cause the problem :
++        # (Error 1 error LNK2001: unresolved external symbol
++        # "??_R0?AVError@QuantLib@@@8??0Error@QuantLib@@QAE@ABV01@@Z20"
++        # (??_R0?AVError@QuantLib@@@8??0Error@QuantLib@@QAE@ABV01@@Z20)
++        # QuantLib.exp	QuantLib
++        # )
++        # See http://en.wikipedia.org/wiki/Visual_C%2B%2B_name_mangling for
++        # reference
++        return (
++            'QuantLib' in symb and
++            '?AVError' not in symb and
++            '??_G' not in symb and
++            '??_E' not in symb
++        )
++
++    def _is_boost_assertion(symb):
++        return '?assertion_failed@boost' in mangled_symbol
++
++    for line in six.text_type(result, 'ascii').split('\n'):
++        # Example line:
++        # 491 00000000 SECTCA notype () External | <symbol> (<signature>)
++        # Find the symbol location in the line
++        idx = line.find('|')
++        if idx < 0:
++            continue
++
++        # Get the symbol type
++        symbol_type = line[:idx].strip().split(" ")[-1].lower()
++        if symbol_type != "external":
++            continue
++
++        mangled_symbol =  line[idx+1:].strip()
++        idx = mangled_symbol.find("(")
++        if idx >= 0:
++            mangled_symbol = mangled_symbol[:idx].strip()
++
++        if len(mangled_symbol) > 0:
++            if _is_ql_symbols(mangled_symbol) or _is_boost_assertion(mangled_symbol):
++                yield mangled_symbol
++
++def process_directory(directory_name):
++    for object_file in glob.glob(os.path.join(directory_name, '*.obj')):
++        for symbol in symbol_generator_from_obj_file(object_file):
++            yield symbol
++
++QL_LIBRARY = "QuantLib"
++if VC_VERSION >= 10.0:
++    QL_LIBRARY = 'QuantLib-vc%d0-%s-mt' % (VC_VERSION, ARCH)
++
++HEADER = """LIBRARY	"%s"
++EXPORTS
++""" % QL_LIBRARY
++
++def test():
++    test_directory = r"C:\dev\QuantLib-1.4\build\vc%d0\%s\Release" % (VC_VERSION, ARCH)
++    test_file = os.path.join(test_directory, "zeroyieldstructure.obj")
++
++    for obj in symbol_generator_from_obj_file(test_file):
++        pass
++
++def generate_deffile_from_dir(input_directory, output_file):
++
++    with open(output_file, 'w') as fh:
++        fh.write(HEADER)
++        for symbol in process_directory(input_directory):
++            fh.write('	 {}\n'.format(symbol))
++
++def main():
++    input_directory = os.path.join(os.path.dirname(__file__), r"build\vc%d0\%s\Release" % ((VC_VERSION, ARCH)))
++    output_file = os.path.join(os.path.dirname(__file__), "ql_symbols.def")
++    assert(os.path.exists(input_directory))
++
++    generate_deffile_from_dir(input_directory, output_file)
++    print ('{} generated'.format(output_file))
++
++if __name__ == '__main__':
++    main()
++
+diff --git ql/settings.hpp ql/settings.hpp
+index 8091d02..0f783de 100644
+--- ql/settings.hpp
++++ ql/settings.hpp
+@@ -34,7 +34,7 @@
+ namespace QuantLib {
+ 
+     //! global repository for run-time library settings
+-    class Settings : public Singleton<Settings> {
++    class __declspec(dllexport) Settings : public Singleton<Settings> {
+         friend class Singleton<Settings>;
+       private:
+         Settings();
+diff --git ql_symbols.def ql_symbols.def
+new file mode 100644
+index 0000000..79afa48
+--- /dev/null
++++ ql_symbols.def
+@@ -0,0 +1,2 @@
++LIBRARY   QuantLib
++EXPORTS
+-- 
+2.8.2.windows.1
+
