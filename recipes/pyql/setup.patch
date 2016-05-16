@@ -1,0 +1,66 @@
+From 71feb34a53f0cfec6872056d6e3516346e9054fd Mon Sep 17 00:00:00 2001
+From: Tony Roberts <tony@pyxll.com>
+Date: Mon, 16 May 2016 11:06:37 +0100
+Subject: [PATCH] Don't copy dlls for conda build
+
+---
+ setup.py | 43 -------------------------------------------
+ 1 file changed, 43 deletions(-)
+
+diff --git setup.py setup.py
+index a2f8316..bd7793a 100644
+--- setup.py
++++ setup.py
+@@ -260,49 +260,6 @@ class pyql_build_ext(build_ext):
+             pass
+         build_ext.build_extensions(self)
+ 
+-    def run(self):
+-        build_ext.run(self)
+-
+-        # Find the quantlib dll and copy it to the built package
+-        if sys.platform == "win32":
+-            # Find the visual studio runtime redist dlls
+-            dlls = []
+-            if VC_INCLUDE_REDIST:
+-                plat_name = msvc9compiler.get_platform()
+-                plat_spec = msvc9compiler.PLAT_TO_VCVARS[plat_name]
+-
+-                # look for the compiler executable
+-                vc_env = msvc9compiler.query_vcvarsall(VC_VERSION, plat_spec)
+-                for path in vc_env['path'].split(os.pathsep):
+-                    if os.path.exists(os.path.join(path, "cl.exe")):
+-                        crt_dir = "Microsoft.VC%d0.CRT" % VC_VERSION
+-                        redist_dir = os.path.join(path, "..", ".redist", ARCH, crt_dir)
+-                        if not os.path.exists(redist_dir):
+-                            redist_dir = os.path.join(path, "..", "..", "redist", ARCH, crt_dir)
+-                        break
+-                else:
+-                    raise RuntimeError("Can't find cl.exe")
+-
+-                assert os.path.exists(redist_dir), "Can't find CRT redist dlls '%s'" % redist_dir
+-                dlls.extend(glob.glob(os.path.join(redist_dir, "msvc*.dll")))
+-
+-            for libdir in LIBRARY_DIRS:
+-                if os.path.exists(os.path.join(libdir, QL_LIBRARY + ".dll")):
+-                    dlls.append(os.path.join(libdir, QL_LIBRARY + ".dll"))
+-                    break
+-            else:
+-                raise AssertionError("%s.dll not found" % QL_LIBRARY)
+-
+-            for dll in dlls:
+-                self.copy_file(dll, os.path.join(self.build_lib, "quantlib", os.path.basename(dll)))
+-
+-            # Write the list of dlls to be pre-loaded
+-            filename = os.path.join(self.build_lib, "quantlib", "preload_dlls.txt")
+-            log.info("writing preload dlls list to %s", filename)
+-            if not self.dry_run:
+-                with open(filename, "wt") as fh:
+-                    fh.write("\n".join(map(os.path.basename, dlls)))
+-
+ 
+ setup(
+     name = 'quantlib',
+-- 
+2.8.2.windows.1
+

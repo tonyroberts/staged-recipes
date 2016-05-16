@@ -1,0 +1,44 @@
+{% set version = "0.1" %}
+
+package:
+  name: pyql
+  version: {{ version }}
+
+source:
+  git_url: https://github.com/enthought/pyql
+  git_rev: ceb838581ad4db73a0208bc51bde2771bb534e5f
+  patches:
+    - setup.patch
+
+build:
+  script: python setup.py install
+
+requirements:
+  build:
+    - python
+    - quantlib
+    - numpy
+    - boost
+    - cython
+    - tabulate
+    - pandas
+    - six
+  run:
+    - quantlib
+    - numpy
+    - tabulate
+    - pandas
+    - six
+
+test:
+    imports:
+        - quantlib
+
+about:
+  home: https://github.com/enthought/pyql
+  license: OSI
+  summary: PyQL - QuantLib Cython wrappers
+
+extra:
+  recipe-maintainers:
+    - TonyRoberts
